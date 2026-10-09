@@ -44,11 +44,22 @@ struct SettingsView: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
 
-            Section("This Mac") {
+            Section {
+                Picker("This Mac is", selection: $store.thisMac) {
+                    Text("Not set").tag("")
+                    ForEach(store.machines) { Text($0.name).tag($0.id) }
+                }
                 Picker("When this Mac locks", selection: $store.onLock) { actionChoices }
                 Picker("When this Mac unlocks", selection: $store.onUnlock) { actionChoices }
                 Toggle("Launch at login", isOn: $launchAtLogin)
                     .onChange(of: launchAtLogin) { setLaunchAtLogin($0) }
+            } header: {
+                Text("This Mac")
+            } footer: {
+                Text(store.thisMac.isEmpty
+                     ? "Set which machine this Mac is to switch on lock only while the monitor is showing it."
+                     : "On lock, the monitor is switched only while it is showing this Mac.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
@@ -71,6 +82,7 @@ struct SettingsView: View {
 
     private func remove(_ id: String) {
         store.machines.removeAll { $0.id == id }
+        if store.thisMac == id { store.thisMac = "" }
         if store.onLock == id { store.onLock = "" }
         if store.onUnlock == id { store.onUnlock = "" }
     }

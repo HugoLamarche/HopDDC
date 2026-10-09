@@ -10,7 +10,7 @@ Mac locks or unlocks, and the same binary doubles as a command-line tool.
 - Pick a machine from the menu bar (or press 1-9 while the menu is open). The
   active one has a checkmark.
 - Optionally switch when this Mac locks or unlocks, for example to your PC when you
-  walk away from the Mac.
+  walk away from the Mac, but only if the monitor is showing the Mac at the time.
 - Launches at login and stays out of the Dock.
 - Pure Swift, no drivers, no extra permissions.
 
@@ -44,7 +44,10 @@ Open **Settings…** from the menu bar icon (or press ⌘, while the menu is ope
 - **Machines**: a name and an input for each computer plugged into the monitor.
   If you don't know which input a computer is on, switch to it with the monitor's
   buttons, then press **Use Current** next to it.
-- **This Mac**: what to do when this Mac locks or unlocks, and launch at login.
+- **This Mac**: which of the machines is the Mac running HopDDC, what to do when
+  it locks or unlocks, and launch at login. Once this Mac is set, locking only
+  switches the monitor if it is showing this Mac, so locking while you are working
+  on another computer leaves the screen alone.
 
 Settings are stored in the app's preferences (`defaults read com.hugolamarche.hopddc`)
 and shared with the command line.

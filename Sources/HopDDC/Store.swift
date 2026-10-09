@@ -14,6 +14,8 @@ final class Store: ObservableObject {
     /// Part of the monitor's product name. Empty means the first external monitor.
     @Published var monitor: String { didSet { defaults.set(monitor, forKey: "monitor") } }
     @Published var machines: [Machine] { didSet { saveMachines() } }
+    /// The machine id of the Mac running HopDDC, or "" if not set.
+    @Published var thisMac: String { didSet { defaults.set(thisMac, forKey: "thisMac") } }
     /// Machine ids, or "" to do nothing.
     @Published var onLock: String { didSet { defaults.set(onLock, forKey: "onLock") } }
     @Published var onUnlock: String { didSet { defaults.set(onUnlock, forKey: "onUnlock") } }
@@ -27,6 +29,7 @@ final class Store: ObservableObject {
         monitor = defaults.string(forKey: "monitor") ?? ""
         machines = defaults.string(forKey: "machines")
             .flatMap { try? JSONDecoder().decode([Machine].self, from: Data($0.utf8)) } ?? []
+        thisMac = defaults.string(forKey: "thisMac") ?? ""
         onLock = defaults.string(forKey: "onLock") ?? ""
         onUnlock = defaults.string(forKey: "onUnlock") ?? ""
     }

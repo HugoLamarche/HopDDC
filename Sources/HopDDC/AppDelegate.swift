@@ -36,7 +36,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     // MARK: Lock / unlock
 
     @objc private func screenLocked() {
-        if let m = store.machine(id: store.onLock) { switchTo(m, reason: "lock") }
+        guard let m = store.machine(id: store.onLock) else { return }
+        // With this Mac identified, leave the monitor alone unless it is showing this Mac.
+        switchTo(m, reason: "lock", onlyIfShowing: store.machine(id: store.thisMac))
     }
 
     @objc private func screenUnlocked() {
@@ -45,7 +47,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     // MARK: DDC
 
-    private func switchTo(_ machine: Machine, reason: String) {
+    private func switchTo(_ machine: Machine, reason: String, onlyIfShowing required: Machine? = nil) {
         let match = store.monitor
         ddc.async {
             // Keep App Nap from stretching the waits between DDC writes and read-backs.
@@ -56,6 +58,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 appLog("\(reason): no monitor matching '\(match)'")
                 DispatchQueue.main.async { self.setIcon(warning: true) }
                 return
+            }
+            if let required {
+                // A monitor showing another input may not answer at all; that also means "not this Mac".
+                let current = monitor.currentInput()
+                guard current == required.input else {
+                    let showing = current.map(VCP.inputLabel) ?? "unknown"
+                    appLog("\(reason): skipped, monitor is showing \(showing), not \(required.name)")
+                    return
+                }
             }
             let result = monitor.set(VCP.input, machine.input)
             appLog("\(reason): \(machine.name) (\(VCP.inputLabel(machine.input))) -> \(result)")
@@ -102,7 +113,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             menu.addItem(hint)
         }
         for (i, machine) in store.machines.enumerated() {
-            let item = NSMenuItem(title: "\(machine.name)  ·  \(VCP.inputLabel(machine.input))",
+            let name = machine.id == store.thisMac ? "\(machine.name) (this Mac)" : machine.name
+            let item = NSMenuItem(title: "\(name)  ·  \(VCP.inputLabel(machine.input))",
                                   action: #selector(pickMachine(_:)), keyEquivalent: i < 9 ? "\(i + 1)" : "")
             item.target = self
             item.representedObject = machine.id
