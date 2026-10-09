@@ -2,14 +2,14 @@ import Foundation
 
 struct Machine: Codable, Identifiable, Hashable {
     var id = UUID().uuidString
-    var name: String   // shown in the menu; `inputbar to <name>` on the command line
+    var name: String   // shown in the menu; `ddchop to <name>` on the command line
     var input: UInt16  // MCCS input code (see VCP.swift)
 }
 
-/// All settings, persisted in the app's preferences (`defaults read com.hugolamarche.inputbar`).
+/// All settings, persisted in the app's preferences (`defaults read com.hugolamarche.ddchop`).
 final class Store: ObservableObject {
     static let shared = Store()
-    static let domain = "com.hugolamarche.inputbar"
+    static let domain = "com.hugolamarche.ddchop"
 
     /// Part of the monitor's product name. Empty means the first external monitor.
     @Published var monitor: String { didSet { defaults.set(monitor, forKey: "monitor") } }
@@ -46,9 +46,9 @@ final class Store: ObservableObject {
     }
 }
 
-/// Appends a line to ~/Library/Logs/InputBar.log.
+/// Appends a line to ~/Library/Logs/DDCHop.log.
 func appLog(_ message: String) {
-    let url = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Logs/InputBar.log")
+    let url = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Logs/DDCHop.log")
     let line = "\(ISO8601DateFormatter().string(from: Date())) \(message)\n"
     if let handle = try? FileHandle(forWritingTo: url) {
         handle.seekToEndOfFile()

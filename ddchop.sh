@@ -1,32 +1,32 @@
 #!/bin/sh
-# Build, install or remove InputBar.
-#   ./inputbar.sh build       build build/InputBar.app
-#   ./inputbar.sh install     build, copy to ~/Applications, add the CLI and aliases, launch
-#   ./inputbar.sh uninstall   quit, remove the login item, app, CLI link and aliases
+# Build, install or remove DDCHop.
+#   ./ddchop.sh build       build build/DDCHop.app
+#   ./ddchop.sh install     build, copy to ~/Applications, add the CLI and aliases, launch
+#   ./ddchop.sh uninstall   quit, remove the login item, app, CLI link and aliases
 set -e
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
-BUILT="$DIR/build/InputBar.app"
-DEST="$HOME/Applications/InputBar.app"
-EXE="$DEST/Contents/MacOS/InputBar"
-LINK="$HOME/.local/bin/inputbar"
+BUILT="$DIR/build/DDCHop.app"
+DEST="$HOME/Applications/DDCHop.app"
+EXE="$DEST/Contents/MacOS/DDCHop"
+LINK="$HOME/.local/bin/ddchop"
 ZSHRC="$HOME/.zshrc"
-BEGIN='# >>> InputBar >>>'
-END='# <<< InputBar <<<'
+BEGIN='# >>> DDCHop >>>'
+END='# <<< DDCHop <<<'
 
 build() {
     swift build --package-path "$DIR" -c release
     BIN="$(swift build --package-path "$DIR" -c release --show-bin-path)"
     rm -rf "$BUILT"
     mkdir -p "$BUILT/Contents/MacOS"
-    cp "$BIN/InputBar" "$BUILT/Contents/MacOS/"
+    cp "$BIN/DDCHop" "$BUILT/Contents/MacOS/"
     cp "$DIR/Resources/Info.plist" "$BUILT/Contents/"
     codesign --force --sign - "$BUILT"
 }
 
 quit_app() {
-    pkill -x InputBar 2>/dev/null || true
-    while pgrep -x InputBar >/dev/null; do sleep 0.1; done
+    pkill -x DDCHop 2>/dev/null || true
+    while pgrep -x DDCHop >/dev/null; do sleep 0.1; done
 }
 
 remove_aliases() {
@@ -45,9 +45,9 @@ install() {
     remove_aliases
     cat >> "$ZSHRC" <<EOF
 $BEGIN
-alias tostudio='inputbar to studio'
-alias tomini='inputbar to mini'
-alias topc='inputbar to pc'
+alias tostudio='ddchop to studio'
+alias tomini='ddchop to mini'
+alias topc='ddchop to pc'
 $END
 EOF
     open "$DEST"
@@ -59,7 +59,7 @@ uninstall() {
     quit_app
     rm -rf "$DEST"
     rm -f "$LINK"
-    defaults delete com.hugolamarche.inputbar didFirstLaunch 2>/dev/null || true  # re-add login item on next install
+    defaults delete com.hugolamarche.ddchop didFirstLaunch 2>/dev/null || true  # re-add login item on next install
     remove_aliases
     echo "Uninstalled. Run 'unalias tostudio tomini topc' in terminals that are already open."
 }

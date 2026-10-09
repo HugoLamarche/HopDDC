@@ -40,7 +40,7 @@ struct SettingsView: View {
             } header: {
                 Text("Machines")
             } footer: {
-                Text("Names work on the command line too: inputbar to <name>")
+                Text("Names work on the command line too: ddchop to <name>")
                     .font(.caption).foregroundStyle(.secondary)
             }
 

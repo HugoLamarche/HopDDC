@@ -7,7 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let store = Store.shared
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     private let menu = NSMenu()
-    private let ddc = DispatchQueue(label: "InputBar.ddc")  // DDC traffic is serialized here
+    private let ddc = DispatchQueue(label: "DDCHop.ddc")  // DDC traffic is serialized here
     private var monitorName: String?
     private var currentInput: UInt16?
     private var refreshing = false
@@ -113,7 +113,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let settings = NSMenuItem(title: "Settings…", action: #selector(openSettings), keyEquivalent: ",")
         settings.target = self
         menu.addItem(settings)
-        menu.addItem(NSMenuItem(title: "Quit InputBar", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: "Quit DDCHop", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 
         updateMenu()
         refresh()
@@ -141,7 +141,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             let hosting = NSHostingController(rootView: SettingsView(store: store))
             hosting.sizingOptions = [.minSize]
             let window = NSWindow(contentViewController: hosting)
-            window.title = "InputBar Settings"
+            window.title = "DDCHop Settings"
             window.styleMask = [.titled, .closable, .resizable]
             window.setContentSize(NSSize(width: 560, height: 560))
             window.isReleasedWhenClosed = false
@@ -154,6 +154,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func setIcon(warning: Bool) {
         let symbol = warning ? "exclamationmark.triangle" : "display"
-        statusItem.button?.image = NSImage(systemSymbolName: symbol, accessibilityDescription: "InputBar")
+        statusItem.button?.image = NSImage(systemSymbolName: symbol, accessibilityDescription: "DDCHop")
     }
 }
