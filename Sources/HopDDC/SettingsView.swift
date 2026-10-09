@@ -66,9 +66,7 @@ private struct ProfileView: View {
     let onForget: () -> Void
     @State private var reading: String?  // id of the machine whose input is being read
     @State private var current: UInt16?      // the input the monitor is showing
-    @State private var reported: [UInt16]?   // the inputs the monitor says it has
     @State private var detecting = false
-    @State private var detected = false      // a detection has finished
 
     var body: some View {
         Form {
@@ -84,7 +82,7 @@ private struct ProfileView: View {
             }
 
             Section {
-                if connected != nil && !detected {
+                if connected != nil && profile.inputsReported == nil {
                     Text("Detecting…").foregroundStyle(.secondary)
                 } else if let reported {
                     // The monitor lists its inputs: show them, nothing to choose.
@@ -103,11 +101,11 @@ private struct ProfileView: View {
                 HStack {
                     Text("Inputs")
                     Spacer()
-                    Button(detecting ? "Detecting…" : "Detect") { detect(replacing: true) }
+                    Button(detecting ? "Detecting…" : "Detect", action: detect)
                         .disabled(detecting || connected == nil)
                 }
             } footer: {
-                if detected || connected == nil {
+                if profile.inputsReported != nil || connected == nil {
                     Text(reported == nil
                          ? "This monitor does not list its inputs. Check the ones it has; only those are offered for machines."
                          : "Reported by the monitor.")
@@ -160,7 +158,16 @@ private struct ProfileView: View {
             }
         }
         .formStyle(.grouped)
-        .onAppear { if connected != nil { detect(replacing: false) } }
+        .onAppear {
+            // The input list is detected once and saved; only "showing now" is read each time.
+            guard connected != nil else { return }
+            if profile.inputsReported == nil { detect() } else { readCurrentInput() }
+        }
+    }
+
+    /// The inputs the monitor listed itself, or nil if it did not.
+    private var reported: [UInt16]? {
+        profile.inputsReported == true ? profile.inputs : nil
     }
 
     /// Common inputs, plus any others this monitor uses, in a stable order.
@@ -188,9 +195,8 @@ private struct ProfileView: View {
             })
     }
 
-    /// Reads the current input and the monitor's input list. Fills in the offered inputs
-    /// the first time, or always when `replacing`.
-    private func detect(replacing: Bool) {
+    /// Asks the monitor for its input list and saves it, along with the current input.
+    private func detect() {
         detecting = true
         let snapshot = profile
         Monitor.queue.async {
@@ -199,11 +205,19 @@ private struct ProfileView: View {
             let list = monitor?.supportedInputs()
             DispatchQueue.main.async {
                 detecting = false
-                detected = true
                 current = showing
-                reported = list
-                if let list, replacing || profile.inputs == nil { profile.inputs = list }
+                // If it lists nothing, keep the previous inputs as the starting checkboxes.
+                if let list { profile.inputs = list }
+                profile.inputsReported = list != nil
             }
+        }
+    }
+
+    private func readCurrentInput() {
+        let snapshot = profile
+        Monitor.queue.async {
+            let showing = Monitor.all().first(where: snapshot.matches)?.currentInput()
+            DispatchQueue.main.async { current = showing }
         }
     }
 

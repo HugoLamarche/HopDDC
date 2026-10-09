@@ -14,6 +14,8 @@ struct Profile: Codable, Identifiable, Hashable {
     var machines: [Machine] = []
     /// Inputs offered for this monitor, or nil for VCP.commonInputs.
     var inputs: [UInt16]?
+    /// Whether `inputs` came from the monitor itself; nil until the monitor has been asked.
+    var inputsReported: Bool?
     /// The machine id of the Mac running HopDDC, or "" if not set.
     var thisMac = ""
     /// Machine ids, or "" to do nothing.
