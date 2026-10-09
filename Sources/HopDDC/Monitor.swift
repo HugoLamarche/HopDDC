@@ -17,6 +17,9 @@ struct Monitor {
 
     /// Wait between a DDC request and reading its reply. Slow monitors need more;
     /// override with DDC_DELAY_MS.
+    /// All DDC traffic goes through this queue so two requests never interleave on the bus.
+    static let queue = DispatchQueue(label: "HopDDC.ddc")
+
     private static let replyDelay: useconds_t = {
         let ms = ProcessInfo.processInfo.environment["DDC_DELAY_MS"].flatMap { UInt32($0) } ?? 50
         return ms * 1000
@@ -58,12 +61,6 @@ struct Monitor {
         return found
     }
 
-    /// The first external monitor whose name contains `match`, or the first one if `match` is empty.
-    static func find(_ match: String) -> Monitor? {
-        let all = all()
-        return match.isEmpty ? all.first : all.first { $0.name.localizedCaseInsensitiveContains(match) }
-    }
-
     // MARK: VCP
 
     /// Read-only "Get VCP Feature" request. Never changes monitor state.
@@ -80,6 +77,42 @@ struct Monitor {
             return .value(current: UInt16(r[8]) << 8 | UInt16(r[9]), max: UInt16(r[6]) << 8 | UInt16(r[7]))
         }
         return .failed
+    }
+
+    /// Read-only "Capabilities Request", fetched in chunks by offset. Lists what the
+    /// monitor supports, e.g. `(prot(monitor)type(LCD)vcp(10 12 60(0F 11 12) ...))`.
+    func capabilities() -> String? {
+        var text: [UInt8] = []
+        var offset: UInt16 = 0
+        while text.count < 4096 {
+            var chunk: [UInt8]?
+            for _ in 0..<5 where chunk == nil {
+                guard write([0x83, 0xF3, UInt8(offset >> 8), UInt8(offset & 0xFF)]) else { continue }
+                usleep(Self.replyDelay + 10_000)
+                var r = [UInt8](repeating: 0, count: 40)
+                guard IOAVServiceReadI2C(service, Self.chip, Self.host, &r, UInt32(r.count)) == kIOReturnSuccess else { continue }
+                // r: 6E <0x80|len> E3 <offH> <offL> <data...> <chk>; len counts E3, the offset and the data
+                let len = Int(r[1] & 0x7F)
+                guard r[2] == 0xE3, len >= 3, len + 3 <= r.count else { continue }
+                let checksum = r[0..<(len + 2)].reduce(UInt8(0x50), ^)
+                guard checksum == r[len + 2], UInt16(r[3]) << 8 | UInt16(r[4]) == offset else { continue }
+                chunk = Array(r[5..<(len + 2)])
+            }
+            guard let chunk else { return nil }
+            if chunk.isEmpty { break }
+            text += chunk.filter { $0 != 0 }
+            offset += UInt16(chunk.count)
+        }
+        return text.isEmpty ? nil : String(decoding: text, as: UTF8.self)
+    }
+
+    /// The inputs the monitor has, as MCCS codes, or nil if it does not say. Monitors
+    /// with input quirks list their inputs in their own numbering (or not at all), so
+    /// for those the quirk table is the list.
+    func supportedInputs() -> [UInt16]? {
+        let quirks = inputQuirks
+        if !quirks.isEmpty { return quirks.map(\.standard) }
+        return capabilities().flatMap { Capabilities.values(of: VCP.input, in: $0) }
     }
 
     /// Single write, no read-back.
