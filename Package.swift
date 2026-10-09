@@ -2,13 +2,13 @@
 import PackageDescription
 
 let package = Package(
-    name: "DDCHop",
+    name: "HopDDC",
     platforms: [.macOS(.v13)],
     targets: [
         // Declarations for the private IOAVService I2C API in IOKit.
         .target(name: "CIOAVService"),
         .executableTarget(
-            name: "DDCHop",
+            name: "HopDDC",
             dependencies: ["CIOAVService"],
             linkerSettings: [.linkedFramework("IOKit"), .linkedFramework("ServiceManagement")]
         ),

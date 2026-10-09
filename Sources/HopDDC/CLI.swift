@@ -70,7 +70,7 @@ enum CLI {
 
     private static func withMonitor(_ body: (Monitor) -> Int32) -> Int32 {
         let match = Store.shared.monitor
-        guard let m = Monitor.find(match) else { return fail(match.isEmpty ? "no external monitor" : "no monitor matching '\(match)' (see: ddchop list)") }
+        guard let m = Monitor.find(match) else { return fail(match.isEmpty ? "no external monitor" : "no monitor matching '\(match)' (see: hopddc list)") }
         return body(m)
     }
 
@@ -82,15 +82,15 @@ enum CLI {
 
     private static func usage() -> Int32 {
         fail("""
-        ddchop - switch the monitor between machines over DDC/CI
+        hopddc - switch the monitor between machines over DDC/CI
         With no arguments it runs as a menu bar app.
 
-          ddchop to <machine>          switch to a machine (\(machineIds))
-          ddchop input [name|value]    read or switch the input (hdmi1, hdmi2, dp1, ...)
-          ddchop get <setting>         read a setting (brightness, volume, 0x10, ...)
-          ddchop set <setting> <value> change a setting
-          ddchop list                  external monitors and their inputs
-          ddchop login on|off          launch the menu bar app at login
+          hopddc to <machine>          switch to a machine (\(machineIds))
+          hopddc input [name|value]    read or switch the input (hdmi1, hdmi2, dp1, ...)
+          hopddc get <setting>         read a setting (brightness, volume, 0x10, ...)
+          hopddc set <setting> <value> change a setting
+          hopddc list                  external monitors and their inputs
+          hopddc login on|off          launch the menu bar app at login
         """)
         return 2
     }
