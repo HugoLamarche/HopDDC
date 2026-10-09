@@ -136,9 +136,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func openSettings() {
         if settingsWindow == nil {
-            let window = NSWindow(contentViewController: NSHostingController(rootView: SettingsView(store: store)))
+            // A grouped Form scrolls and has no height of its own, so size the window explicitly
+            // and let the hosting controller enforce only the view's minimum size.
+            let hosting = NSHostingController(rootView: SettingsView(store: store))
+            hosting.sizingOptions = [.minSize]
+            let window = NSWindow(contentViewController: hosting)
             window.title = "InputBar Settings"
-            window.styleMask = [.titled, .closable]
+            window.styleMask = [.titled, .closable, .resizable]
+            window.setContentSize(NSSize(width: 560, height: 560))
             window.isReleasedWhenClosed = false
             window.center()
             settingsWindow = window

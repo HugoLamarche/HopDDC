@@ -52,7 +52,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 520)
+        .frame(minWidth: 520, minHeight: 420)
         .onAppear(perform: detectMonitors)
     }
 
