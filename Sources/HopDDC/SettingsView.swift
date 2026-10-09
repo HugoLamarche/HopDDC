@@ -68,6 +68,7 @@ private struct ProfileView: View {
     @State private var current: UInt16?      // the input the monitor is showing
     @State private var reported: [UInt16]?   // the inputs the monitor says it has
     @State private var detecting = false
+    @State private var detected = false      // a detection has finished
 
     var body: some View {
         Form {
@@ -83,16 +84,20 @@ private struct ProfileView: View {
             }
 
             Section {
-                ForEach(allInputs, id: \.self) { input in
-                    Toggle(isOn: offered(input)) {
-                        HStack {
-                            Text(VCP.inputLabel(input))
-                            if input == current {
-                                Text("showing now").font(.caption).foregroundStyle(.secondary)
-                            }
-                        }
+                if connected != nil && !detected {
+                    Text("Detecting…").foregroundStyle(.secondary)
+                } else if let reported {
+                    // The monitor lists its inputs: show them, nothing to choose.
+                    ForEach(reported, id: \.self) { input in
+                        LabeledContent(VCP.inputLabel(input)) { inputStatus(input) }
                     }
-                    .toggleStyle(.checkbox)
+                } else {
+                    ForEach(allInputs, id: \.self) { input in
+                        Toggle(isOn: offered(input)) {
+                            LabeledContent(VCP.inputLabel(input)) { inputStatus(input) }
+                        }
+                        .toggleStyle(.checkbox)
+                    }
                 }
             } header: {
                 HStack {
@@ -102,10 +107,12 @@ private struct ProfileView: View {
                         .disabled(detecting || connected == nil)
                 }
             } footer: {
-                Text(reported == nil
-                     ? "This monitor does not list its inputs. Uncheck the ones it doesn't have; only checked inputs are offered for machines."
-                     : "Detected from the monitor. Only checked inputs are offered for machines.")
-                    .font(.caption).foregroundStyle(.secondary)
+                if detected || connected == nil {
+                    Text(reported == nil
+                         ? "This monitor does not list its inputs. Check the ones it has; only those are offered for machines."
+                         : "Reported by the monitor.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
             }
 
             Section {
@@ -163,6 +170,14 @@ private struct ProfileView: View {
         return VCP.commonInputs + extra.filter { seen.insert($0).inserted }
     }
 
+    @ViewBuilder private func inputStatus(_ input: UInt16) -> some View {
+        let users = profile.machines.filter { $0.input == input }.map(\.name).joined(separator: ", ")
+        HStack(spacing: 6) {
+            if !users.isEmpty { Text(users) }
+            if input == current { Text("showing now").font(.caption).foregroundStyle(.secondary) }
+        }
+    }
+
     private func offered(_ input: UInt16) -> Binding<Bool> {
         Binding(
             get: { (profile.inputs ?? VCP.commonInputs).contains(input) },
@@ -184,6 +199,7 @@ private struct ProfileView: View {
             let list = monitor?.supportedInputs()
             DispatchQueue.main.async {
                 detecting = false
+                detected = true
                 current = showing
                 reported = list
                 if let list, replacing || profile.inputs == nil { profile.inputs = list }
@@ -197,7 +213,7 @@ private struct ProfileView: View {
     }
 
     private func inputChoices(including selected: UInt16) -> [UInt16] {
-        let offered = profile.inputs ?? VCP.commonInputs
+        let offered = reported ?? profile.inputs ?? VCP.commonInputs
         return offered.contains(selected) ? offered : offered + [selected]
     }
 

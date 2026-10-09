@@ -43,9 +43,10 @@ Each connected monitor has its own tab, and **General** holds launch at login.
 
 In a monitor's tab:
 
-- **Inputs**: the monitor's inputs, with the one it is showing now marked. HopDDC
-  checks the ones the monitor reports; many monitors don't report them, so uncheck
-  the ones yours doesn't have. Only checked inputs are offered for machines.
+- **Inputs**: the monitor's inputs, which machine uses each, and the one it is
+  showing now. Many monitors don't report their inputs; for those you get
+  checkboxes instead, so you can tick the ones yours has. Only those are offered
+  for machines.
 - **Machines**: a name and an input for each computer plugged into this monitor.
   If you don't know which input a computer is on, switch to it with the monitor's
   buttons, then press **Use Current** next to it. A monitor with no machines stays
