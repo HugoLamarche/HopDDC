@@ -178,11 +178,7 @@ private struct ProfileView: View {
     }
 
     @ViewBuilder private func inputStatus(_ input: UInt16) -> some View {
-        let users = profile.machines.filter { $0.input == input }.map(\.name).joined(separator: ", ")
-        HStack(spacing: 6) {
-            if !users.isEmpty { Text(users) }
-            if input == current { Text("showing now").font(.caption).foregroundStyle(.secondary) }
-        }
+        if input == current { Text("showing now").font(.caption).foregroundStyle(.secondary) }
     }
 
     private func offered(_ input: UInt16) -> Binding<Bool> {
