@@ -26,6 +26,9 @@ enum VCP {
         0x8D: [("mute", 0x01), ("unmute", 0x02)],
     ]
 
+    /// Inputs offered in Settings: DisplayPort, HDMI, USB-C, then legacy ports.
+    static let commonInputs: [UInt16] = [0x0F, 0x10, 0x11, 0x12, 0x13, 0x1B, 0x03, 0x04, 0x01, 0x02]
+
     /// A setting alias ("brightness") or a code ("0x10", "16").
     static func code(_ s: String) -> UInt8? {
         if let c = aliases[s.lowercased()] { return c }

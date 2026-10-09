@@ -7,13 +7,13 @@ enum CLI {
         case ("list", 1):
             return list()
         case ("to", 2):
-            guard let machine = Config.machine(args[1]) else { return fail("unknown machine '\(args[1])' (\(machineIds))") }
-            return set(VCP.input, machine.input, label: machine.label)
+            guard let machine = Store.shared.machine(named: args[1]) else { return fail("unknown machine '\(args[1])' (\(machineIds))") }
+            return set(VCP.input, machine.input, label: machine.name)
         case ("input", 1):
             return withMonitor { m in
                 guard let input = m.currentInput() else { return fail("could not read the input") }
-                let machine = Config.machines.first { $0.input == input }
-                print("\(VCP.name(of: input, for: VCP.input) ?? String(format: "0x%02X", input))\(machine.map { " (\($0.id))" } ?? "")")
+                let machine = Store.shared.machines.first { $0.input == input }
+                print("\(VCP.name(of: input, for: VCP.input) ?? String(format: "0x%02X", input))\(machine.map { " (\($0.name))" } ?? "")")
                 return 0
             }
         case ("input", 2):
@@ -47,7 +47,7 @@ enum CLI {
         }
     }
 
-    private static var machineIds: String { Config.machines.map(\.id).joined(separator: "|") }
+    private static var machineIds: String { Store.shared.machines.map(\.name).joined(separator: "|") }
 
     private static func set(_ code: UInt8, _ value: UInt16, label: String) -> Int32 {
         withMonitor { m in
@@ -69,7 +69,8 @@ enum CLI {
     }
 
     private static func withMonitor(_ body: (Monitor) -> Int32) -> Int32 {
-        guard let m = Monitor.configured() else { return fail("no monitor matching '\(Config.monitorMatch)' (see: inputbar list)") }
+        let match = Store.shared.monitor
+        guard let m = Monitor.find(match) else { return fail(match.isEmpty ? "no external monitor" : "no monitor matching '\(match)' (see: inputbar list)") }
         return body(m)
     }
 

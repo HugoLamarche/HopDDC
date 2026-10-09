@@ -58,10 +58,10 @@ struct Monitor {
         return found
     }
 
-    /// The monitor named in Config, or the only external monitor if there is just one.
-    static func configured() -> Monitor? {
+    /// The first external monitor whose name contains `match`, or the first one if `match` is empty.
+    static func find(_ match: String) -> Monitor? {
         let all = all()
-        return all.first { $0.name.localizedCaseInsensitiveContains(Config.monitorMatch) } ?? (all.count == 1 ? all[0] : nil)
+        return match.isEmpty ? all.first : all.first { $0.name.localizedCaseInsensitiveContains(match) }
     }
 
     // MARK: VCP
